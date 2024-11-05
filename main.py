@@ -6,16 +6,19 @@ from reportlab.lib.units import mm
 from barcode import EAN13
 from barcode.writer import ImageWriter
 import os
+from datetime import datetime
 
 # Cargar datos del archivo Excel
-excel_path = 'PEDIDO CON CODIGOS DE BARRAS.xlsx'
+excel_path = 'codigos_de_barra_pedidos.xlsx'
 data = pd.read_excel(excel_path)
 
 # Eliminar filas con NaN en las columnas relevantes
 data = data.dropna(subset=['identificador_del_producto', 'CODIGO DE BARRAS'])
 
 # Configurar el nombre del archivo de salida
-pdf_path = 'etiquetas/etiquetas_zapatos.pdf'
+fecha_actual = datetime.now().strftime("%Y%m%d")
+pdf_path = f'etiquetas/etiquetas_zapatos_{fecha_actual}.pdf'
+
 c = canvas.Canvas(pdf_path, pagesize=A4)
 width, height = A4
 
