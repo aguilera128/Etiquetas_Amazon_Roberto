@@ -8,9 +8,9 @@ from barcode.writer import ImageWriter
 import os
 from datetime import datetime
 
-# Cargar datos del archivo Excel
+# Cargar datos del archivo Excel, forzando la columna 'CODIGO DE BARRAS' como string
 excel_path = 'codigos_de_barra_pedidos.xlsx'
-data = pd.read_excel(excel_path)
+data = pd.read_excel(excel_path, dtype={'CODIGO DE BARRAS': str})
 
 # Eliminar filas con NaN en las columnas relevantes
 data = data.dropna(subset=['identificador_del_producto', 'CODIGO DE BARRAS'])
@@ -45,12 +45,15 @@ for index, row_data in data.iterrows():
         print(f"Error: El formato del identificador '{identificador}' no es válido.")
         continue
 
-    # Obtener el código de barras
-    codigo_barras = str(int(row_data['CODIGO DE BARRAS']))  # Convertir a entero y luego a string
+    # Obtener el código de barras como string directamente
+    codigo_barras = str(row_data['CODIGO DE BARRAS']).strip()
 
-    # Verificar que el código de barras tenga exactamente 13 dígitos
-    if len(codigo_barras) != 13:
-        print(f"Error: El código de barras {codigo_barras} no tiene 13 dígitos y será omitido.")
+    # Depuración: Imprimir el código de barras leído y su longitud
+    #print(f"Índice {index}: Código leído: '{codigo_barras}' (longitud: {len(codigo_barras)})")
+
+    # Verificar que el código de barras tenga exactamente 13 dígitos y sea numérico
+    if len(codigo_barras) != 13 or not codigo_barras.isdigit():
+        print(f"Error: El código '{codigo_barras}' no tiene 13 dígitos o contiene caracteres no numéricos y será omitido.")
         continue
 
     # Coordenadas para la celda actual
@@ -64,8 +67,12 @@ for index, row_data in data.iterrows():
 
     # Generar el código de barras como imagen y verificar que se guarda correctamente
     barcode_image_path = f"barcode_{codigo_barras}"  # No incluir .png en el nombre
-    ean = EAN13(codigo_barras, writer=ImageWriter())
-    ean.save(barcode_image_path)  # La función save añadirá automáticamente .png
+    try:
+        ean = EAN13(codigo_barras, writer=ImageWriter())
+        ean.save(barcode_image_path)  # La función save añadirá automáticamente .png
+    except Exception as e:
+        print(f"Error al generar el código de barras '{codigo_barras}': {e}")
+        continue
 
     # Añadir .png a la ruta para abrirla después de guardarla
     barcode_image_path += ".png"
@@ -73,13 +80,13 @@ for index, row_data in data.iterrows():
     # Verificar que la imagen existe antes de intentar dibujarla en el PDF
     if os.path.exists(barcode_image_path):
         # Colocar el código de barras en el PDF, centrado debajo del texto
-        c.drawImage(barcode_image_path, x -15 , y - 50, width=45*mm, height=17*mm)
+        c.drawImage(barcode_image_path, x - 15, y - 50, width=45*mm, height=17*mm)
 
         # Colocar la talla a la derecha del código de barras y alineada verticalmente con este
         c.setFont("Helvetica-Bold", 40)
         c.drawString(x + 100, y - 50 + 16, talla)  # Alinear la talla con la base del código de barras
     else:
-        print(f"Error: No se pudo generar la imagen para el código de barras {codigo_barras}")
+        print(f"Error: No se pudo generar la imagen para el código de barras '{codigo_barras}'")
 
     # Borrar la imagen temporal del código de barras
     os.remove(barcode_image_path)
