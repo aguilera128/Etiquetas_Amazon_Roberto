@@ -51,9 +51,9 @@ for index, row_data in data.iterrows():
     # Depuración: Imprimir el código de barras leído y su longitud
     #print(f"Índice {index}: Código leído: '{codigo_barras}' (longitud: {len(codigo_barras)})")
 
-    # Verificar que el código de barras tenga exactamente 13 dígitos y sea numérico
-    if len(codigo_barras) != 13 or not codigo_barras.isdigit():
-        print(f"Error: El código '{codigo_barras}' no tiene 13 dígitos o contiene caracteres no numéricos y será omitido.")
+    # Verificar que el código de barras tenga 12 o 13 dígitos y sea numérico
+    if len(codigo_barras) not in (12, 13) or not codigo_barras.isdigit():
+        print(f"Error: El código '{codigo_barras}' no tiene 12 o 13 dígitos o contiene caracteres no numéricos y será omitido.")
         continue
 
     # Coordenadas para la celda actual
